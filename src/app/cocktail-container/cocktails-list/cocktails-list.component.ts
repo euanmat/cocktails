@@ -8,9 +8,8 @@ import { CocktailService } from '../../shared/services/cocktail.service';
   styleUrls: ['./cocktails-list.component.css']
 })
 export class CocktailsListComponent implements OnInit {
-	
-  cocktails: Cocktail[];
-  activeCocktail: number;  
+  public cocktails: Cocktail[];
+  public activeCocktail: number;  
 
   constructor(private cocktailService: CocktailService) { }
 

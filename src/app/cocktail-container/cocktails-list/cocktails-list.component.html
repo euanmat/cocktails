@@ -1,6 +1,10 @@
 <div class="row">
 	<div class="list-group col-12">
-		<a (click)="choixCocktail(choix)" *ngFor="let cocktail of cocktails; let choix = index" class="list-group-item list-group-action" >{{cocktail.name}}</a>
+		<a 
+		*ngFor="let cocktail of cocktails; let choix = index"
+		[activeDirective] = "choix === activeCocktail"
+		(click)="choixCocktail(choix)"  
+		class="list-group-item list-group-action" >{{cocktail.name}}</a>
 	</div>
 </div>
 <hr>
