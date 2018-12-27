@@ -5,17 +5,10 @@ import { Directive, Input, OnChanges, HostBinding } from '@angular/core';
 })
 export class ActiveDirective implements OnChanges {
   @Input('activeDirective') isActive: boolean;
-  @HostBinding('style.background-color') backgroundColor: string;
-  @HostBinding('style.color') color: string;
+  @HostBinding('class.active') activeBinding: boolean;
   
   ngOnChanges() {
-	if(this.isActive) {
-		this.backgroundColor = '#3498db';
-		this.color = 'white';
-	} else {
-		this.backgroundColor = 'transparent';
-		this.color = 'black';
-	}
+	this.activeBinding = this.isActive;
   }
 
   constructor() { }

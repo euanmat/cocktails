@@ -1,48 +1,63 @@
 import { Injectable } from '@angular/core';
-
+import { HttpClient } from '@angular/common/http';
 
 import { Cocktail } from '../models/cocktail.model';
 import { Ingredient } from '../models/ingredient.model';
 
-import { BehaviorSubject} from 'rxjs';
+import { filter, map } from 'rxjs/operators';
+import { Observable, BehaviorSubject } from 'rxjs';
+
 
 @Injectable()
 export class CocktailService {
 
-  public cocktails: BehaviorSubject<Cocktail[]> = new BehaviorSubject([
-	new Cocktail('Mojito', 
-	'https://www.kitchensanctuary.com/wp-content/uploads/2016/08/Pineapple-and-Ginger-Mojitos-square.jpg', 
-	'Traditionally, a mojito is a cocktail that consists of five ingredients: white rum, sugar (traditionally sugar cane juice), lime juice, soda water, and mint. Its combination of sweetness, citrus, and mint flavors is intended to complement the rum, and has made the mojito a popular summer drink.',
-	[
-	new Ingredient('Fresh mint leaves', 6),
-	new Ingredient('Rhum', 1),
-	new Ingredient('Soda', 3),
-	new Ingredient('Lemon slices', 2),
-	new Ingredient('Sugar', 2)
-	]),
-	new Cocktail('Pina Colada', 
-	'https://search.chow.com/thumbnail/1280/800/www.chowstatic.com/assets/models/promotions/photos/29480/original/pina-colada-recipe-chowhound.jpg', 
-	'The name piña colada literally means strained pineapple, a reference to the freshly pressed and strained pineapple juice used in the drink preparation.',
-	[
-	new Ingredient('Pineapple juice', 2),
-	new Ingredient('Rhum', 1),
-	new Ingredient('ice', 2)
-	]),
-	new Cocktail('White Russian', 
-	'http://www.tastecocktails.com/wp-content/uploads/2016/11/WhiteRussian720FB.jpg', 
-	'A White Russian is a cocktail made with vodka, coffee liqueur, and cream served with ice in an Old Fashioned glass. Often milk will be used as an alternative to cream.',
-	[
-		new Ingredient('Coffee cream', 2),
-		new Ingredient('Vodka', 1),
-		new Ingredient('Fresh cream', 1)
-	])
-  ]);
-	
-  public cocktail: BehaviorSubject<Cocktail> = new BehaviorSubject(this.cocktails.value[0]);
+  public cocktails: BehaviorSubject<Cocktail[]> = new BehaviorSubject(null);
 
-  constructor() { }
+  constructor(private http: HttpClient) {
+	  this.initCocktails();
+  }
   
-  selectCocktail(index: number) {
-	  this.cocktail.next(this.cocktails.value[index]);
+  initCocktails(): void {
+	this.http.get<Cocktail[]>('https://cocktails-25319.firebaseio.com/cocktails.json').subscribe( (cocktails: Cocktail[]) => {
+		this.cocktails.next(cocktails)
+	});
+  }
+  
+  getCocktail(index: number): Observable<Cocktail> {
+	  return this.cocktails.pipe(filter((cocktails: Cocktail[]) => cocktails != null ),
+		map((cocktails: Cocktail[]) => cocktails[index]));
+  }
+  
+  ajoutCocktail(cocktail: Cocktail): void {
+  	  // copie de la liste des cocktails actuelle
+	  const cocktailsCopy: Cocktail[] = this.cocktails.value.slice();
+	  let exists: boolean = false;
+	  
+	  // ajout du nouveau cocktail
+	  cocktailsCopy.push(cocktail);  
+
+	  // mise à jour de la liste + notification
+	  this.save(cocktailsCopy);
+  }
+  
+  editerCocktail(editCocktail: Cocktail): void {
+  	  // copie de la liste des cocktails actuelle 
+	  const cocktailsCopy = this.cocktails.value.slice();	
+	  
+	  // recherche du cocktail par son nom
+	  const index = cocktailsCopy.findIndex( c => c.name === editCocktail.name);
+
+	  // mise à jour du cocktail édité dans la liste
+	  cocktailsCopy[index] = editCocktail;
+
+	  // enregistrement en base de données
+	  this.save(cocktailsCopy);
+  }
+
+    save(cocktails: Cocktail[]): void {
+    	console.log("enregistrement en base de données !");
+  		this.http.put('https://cocktails-25319.firebaseio.com/cocktails.json', cocktails).subscribe((ret: Cocktail[]) => {
+  			this.cocktails.next(ret);
+  		});
   }
 }
